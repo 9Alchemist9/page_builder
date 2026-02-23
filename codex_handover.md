@@ -5,7 +5,7 @@ Data de atualizacao: 23/02/2026
 ## Projeto
 
 - Nome: `page_builder`
-- Caminho: `\\wsl.localhost\Ubuntu\home\alchemist\projects\page_builder`
+- Caminho: `\\wsl.localhost\Ubuntu\home\alchemist\page_builder\page_builder`
 - Objetivo: page builder comercial para profissionais autonomos, com niveis de maturidade do produto.
 
 ## Status atual (Nivel 1 concluido)
@@ -52,6 +52,24 @@ Data de atualizacao: 23/02/2026
   - feature flags por `unlockAt`.
   - seletor de nivel no painel (simulacao local).
 - Documento tecnico criado: `data_model.md`.
+- Grande rodada de refinamentos de UX do builder/preview:
+  - Sidebar mais compacta (campos menores, menos ruido visual, tema mais neutro).
+  - Apenas um editor de secao aberto por vez (accordion global).
+  - Rodape editavel com colapso e controles alinhados ao padrao das secoes.
+  - Hero com upload por explorer para fundo e imagem de perfil.
+  - Hero com customizacao de alinhamento/posicao de textos e imagem (X/Y).
+  - Sliders com campo numerico sincronizado (digitacao + arraste).
+  - Escolha de fonte para titulos e textos.
+  - Preview com barra de dispositivos (desktop/tablet/mobile), olho (publicada) e avatar (dados da conta).
+  - Visualizacao publicada integrada ao fluxo do builder.
+  - Hero com novos modos de fundo: sem preenchimento, cor solida, gradiente e imagem.
+  - Hero com largura/altura configuraveis (com unidades CSS).
+  - Correcao de preview para `vw` no Hero considerar a largura da tela simulada no builder.
+  - Imagem de fundo do Hero sem overlay azul forcado.
+  - Subsecoes colapsaveis no editor do Hero (`Fundo`, `Imagem de perfil`, `Titulo`, `Subtitulo`).
+  - Colapso com chevron (mesmo estilo visual de combobox), substituindo triangulos.
+  - Foto de perfil do Hero reposicionada em relacao ao centro absoluto do Hero (`0x/0y = centro`) com limite automatico nas bordas.
+  - Campos de URL/upload de imagem do Hero mais compactos e alinhados.
 
 ## Pendencias para a proxima sessao
 
@@ -64,8 +82,8 @@ Data de atualizacao: 23/02/2026
 
 1. Abrir `index.html` no navegador.
 2. Ou servir localmente:
-   - `python3 -m http.server 8080`
-   - `http://localhost:8080`
+   - `python3 -m http.server 3000`
+   - `http://localhost:3000`
 
 ## Observacoes operacionais
 

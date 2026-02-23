@@ -357,6 +357,31 @@ button {
   cursor: pointer;
 }
 
+.builder-panel .field input.field-input-url-compact {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 0.76rem;
+  line-height: 1.05;
+}
+
+.builder-panel .field input.file-input-compact[type="file"] {
+  height: 30px;
+  min-height: 30px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  line-height: 22px;
+}
+
+.builder-panel .field input.file-input-compact[type="file"]::file-selector-button {
+  height: 20px;
+  min-height: 20px;
+  margin: 0 8px 0 0;
+  padding: 0 10px;
+  line-height: 18px;
+  vertical-align: middle;
+}
+
 .builder-panel .field input[type="range"] {
   height: var(--builder-control-height);
 }

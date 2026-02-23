@@ -1049,11 +1049,11 @@ function editorHero(section, index, total) {
                 </div>
                 <div class="field ${showImage}">
                   <label>Imagem de fundo (URL)</label>
-                  <input type="text" data-s="${section.id}" data-k="bgImage" value="${esc(d.bgImage)}" placeholder="https://..." />
+                  <input class="field-input-url-compact" type="text" data-s="${section.id}" data-k="bgImage" value="${esc(d.bgImage)}" placeholder="https://..." />
                 </div>
 	                <div class="field ${showImage}">
 	                  <label>Carregar imagem de fundo (explorer)</label>
-	                  <input type="file" accept="image/*" data-a="upload-image" data-s="${section.id}" data-target="bg" />
+	                  <input class="file-input-compact" type="file" accept="image/*" data-a="upload-image" data-s="${section.id}" data-target="bg" />
 	                </div>
 	                </div>
 	              </section>
@@ -1080,11 +1080,11 @@ function editorHero(section, index, total) {
                 </div>
                 <div class="field">
                   <label>Imagem de perfil (URL)</label>
-                  <input type="text" data-s="${section.id}" data-k="profileImage" value="${esc(d.profileImage)}" placeholder="https://..." />
+                  <input class="field-input-url-compact" type="text" data-s="${section.id}" data-k="profileImage" value="${esc(d.profileImage)}" placeholder="https://..." />
                 </div>
                 <div class="field">
                   <label>Carregar imagem de perfil (explorer)</label>
-                  <input type="file" accept="image/*" data-a="upload-image" data-s="${section.id}" data-target="profile" />
+                  <input class="file-input-compact" type="file" accept="image/*" data-a="upload-image" data-s="${section.id}" data-target="profile" />
                 </div>
 	                <div class="field-row">
 	                  <div class="field">

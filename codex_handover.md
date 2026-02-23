@@ -40,12 +40,25 @@ Data de atualizacao: 23/02/2026
 - Recomendado: **Supabase** (autenticacao + banco + storage + RLS) por velocidade de entrega e boa base para SaaS comercial.
 - Alternativa: backend proprio Node + PostgreSQL se houver necessidade forte de controle total e equipe tecnica dedicada.
 
+## Atualizacao desta sessao (23/02/2026)
+
+- Refino visual aplicado no frontend (tokens visuais, foco, hover, cards, modal/toast).
+- Persistencia local versionada implementada em `app.js`:
+  - `schemaVersion: 1`
+  - `localStorage` key: `page_builder_state_v1`
+  - hidratacao com sanitizacao/fallback.
+- Estrutura de niveis preparada no frontend:
+  - niveis `1..5` com limites por nivel.
+  - feature flags por `unlockAt`.
+  - seletor de nivel no painel (simulacao local).
+- Documento tecnico criado: `data_model.md`.
+
 ## Pendencias para a proxima sessao
 
-1. Refino visual/identidade (cores, tipografia, logo, microinteracoes).
-2. Definir estrutura de dados persistivel (mesmo sem conectar no banco ainda).
-3. Preparar arquitetura de niveis (1 a 5) com feature flags por plano.
-4. Depois dos testes locais: conectar autenticacao e persistencia.
+1. Definir identidade final de marca (logo oficial + direcao visual definitiva).
+2. Validar mapeamento de feature flags contra precificacao comercial final.
+3. Planejar migracao de estado local para backend (auth + banco + storage no Nivel 2).
+4. Depois dos testes locais: conectar autenticacao e persistencia reais.
 
 ## Como rodar
 

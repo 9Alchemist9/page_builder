@@ -133,6 +133,15 @@ const ALIGN_OPTIONS = [
 ];
 
 const PREVIEW_INLINE_VIEWPORT_UNITS = new Set(["vw", "svw", "lvw", "dvw", "vi"]);
+const HERO_DRAG_FIELD_MAP = {
+  profile: { xKey: "profileOffsetX", yKey: "profileOffsetY" },
+  title: { xKey: "titleOffsetX", yKey: "titleOffsetY" },
+  subtitle: { xKey: "subtitleOffsetX", yKey: "subtitleOffsetY" }
+};
+const FOOTER_DRAG_FIELD_MAP = {
+  title: { xKey: "footerTitleOffsetX", yKey: "footerTitleOffsetY" },
+  content: { xKey: "footerContentOffsetX", yKey: "footerContentOffsetY" }
+};
 
 const numberKeys = new Set([
   "bgGradientAngle",
@@ -217,8 +226,8 @@ const sectionFactory = {
     showProfile: true,
     profileSize: 120,
     profileSizeUnit: "px",
-    profileRadius: 999,
-    profileRadiusUnit: "px",
+    profileRadius: 100,
+    profileRadiusUnit: "%",
     profileBorderWidth: 3,
     profileBorderWidthUnit: "px",
     profileOffsetX: 0,
@@ -228,12 +237,12 @@ const sectionFactory = {
     title: "Seu Nome Profissional",
     titleAlign: "center",
     titleOffsetX: 0,
-    titleOffsetY: 0,
+    titleOffsetY: -28,
     showSubtitle: true,
     subtitle: "Especialista em resultado rapido com pagina personalizada",
     subtitleAlign: "center",
     subtitleOffsetX: 0,
-    subtitleOffsetY: 0,
+    subtitleOffsetY: 34,
     titleColor: "#ffffff",
     titleSize: 42,
     titleSizeUnit: "px",
@@ -437,23 +446,23 @@ function sanitizeSection(section) {
         showProfile: coerceBoolean(inputData.showProfile, defaults.showProfile),
         profileSize: coerceNumber(inputData.profileSize, defaults.profileSize, 1, 5000),
         profileSizeUnit,
-        profileRadius: coerceNumber(inputData.profileRadius, defaults.profileRadius, 0, 9999),
+        profileRadius: coerceNumber(inputData.profileRadius, defaults.profileRadius, 0, 100),
         profileRadiusUnit,
         profileBorderWidth: coerceNumber(inputData.profileBorderWidth, defaults.profileBorderWidth, 0, 999),
         profileBorderWidthUnit,
-        profileOffsetX: coerceNumber(inputData.profileOffsetX, defaults.profileOffsetX, -600, 600),
-        profileOffsetY: coerceNumber(inputData.profileOffsetY, defaults.profileOffsetY, -240, 240),
+        profileOffsetX: coerceNumber(inputData.profileOffsetX, defaults.profileOffsetX, -5000, 5000),
+        profileOffsetY: coerceNumber(inputData.profileOffsetY, defaults.profileOffsetY, -5000, 5000),
         contentAlign: ["left", "center", "right"].includes(contentAlign) ? contentAlign : defaults.contentAlign,
         showTitle: coerceBoolean(inputData.showTitle, defaults.showTitle),
         title: coerceString(inputData.title, defaults.title),
         titleAlign: ["left", "center", "right"].includes(titleAlign) ? titleAlign : defaults.titleAlign,
-        titleOffsetX: coerceNumber(inputData.titleOffsetX, defaults.titleOffsetX, -600, 600),
-        titleOffsetY: coerceNumber(inputData.titleOffsetY, defaults.titleOffsetY, -240, 240),
+        titleOffsetX: coerceNumber(inputData.titleOffsetX, defaults.titleOffsetX, -5000, 5000),
+        titleOffsetY: coerceNumber(inputData.titleOffsetY, defaults.titleOffsetY, -5000, 5000),
         showSubtitle: coerceBoolean(inputData.showSubtitle, defaults.showSubtitle),
         subtitle: coerceString(inputData.subtitle, defaults.subtitle),
         subtitleAlign: ["left", "center", "right"].includes(subtitleAlign) ? subtitleAlign : defaults.subtitleAlign,
-        subtitleOffsetX: coerceNumber(inputData.subtitleOffsetX, defaults.subtitleOffsetX, -600, 600),
-        subtitleOffsetY: coerceNumber(inputData.subtitleOffsetY, defaults.subtitleOffsetY, -240, 240),
+        subtitleOffsetX: coerceNumber(inputData.subtitleOffsetX, defaults.subtitleOffsetX, -5000, 5000),
+        subtitleOffsetY: coerceNumber(inputData.subtitleOffsetY, defaults.subtitleOffsetY, -5000, 5000),
         titleColor: coerceString(inputData.titleColor, defaults.titleColor),
         titleSize: coerceNumber(inputData.titleSize, defaults.titleSize, 1, 1000),
         titleSizeUnit,
@@ -542,21 +551,21 @@ function sanitizePage(page) {
       textColor: coerceString(page?.footer?.textColor, defaults.footer.textColor),
       showTitle: coerceBoolean(page?.footer?.showTitle, defaults.footer.showTitle),
       title: coerceString(page?.footer?.title, defaults.footer.title),
-      footerTitleOffsetX: coerceNumber(page?.footer?.footerTitleOffsetX, defaults.footer.footerTitleOffsetX, -600, 600),
-      footerTitleOffsetY: coerceNumber(page?.footer?.footerTitleOffsetY, defaults.footer.footerTitleOffsetY, -240, 240),
+      footerTitleOffsetX: coerceNumber(page?.footer?.footerTitleOffsetX, defaults.footer.footerTitleOffsetX, -5000, 5000),
+      footerTitleOffsetY: coerceNumber(page?.footer?.footerTitleOffsetY, defaults.footer.footerTitleOffsetY, -5000, 5000),
       showContent: coerceBoolean(page?.footer?.showContent, defaults.footer.showContent),
       content: coerceString(page?.footer?.content, defaults.footer.content),
       footerContentOffsetX: coerceNumber(
         page?.footer?.footerContentOffsetX,
         defaults.footer.footerContentOffsetX,
-        -600,
-        600
+        -5000,
+        5000
       ),
       footerContentOffsetY: coerceNumber(
         page?.footer?.footerContentOffsetY,
         defaults.footer.footerContentOffsetY,
-        -240,
-        240
+        -5000,
+        5000
       )
     },
     settings: {
@@ -964,6 +973,14 @@ function editorHero(section, index, total) {
   const titleSubCollapsed = isSubsectionCollapsed(section.id, "hero-title");
   const subtitleSubCollapsed = isSubsectionCollapsed(section.id, "hero-subtitle");
   const hasProfileImage = Boolean(String(d.profileImage || "").trim());
+  const hasTitleText = Boolean(String(d.title || "").trim());
+  const hasSubtitleText = Boolean(String(d.subtitle || "").trim());
+  const showProfileAddAction = d.showProfile === false;
+  const showProfileRemoveAction = d.showProfile !== false || hasProfileImage;
+  const showTitleAddAction = d.showTitle === false;
+  const showTitleRemoveAction = d.showTitle !== false || hasTitleText;
+  const showSubtitleAddAction = d.showSubtitle === false;
+  const showSubtitleRemoveAction = d.showSubtitle !== false || hasSubtitleText;
   const showColor = d.bgMode === "color" ? "" : "hidden";
   const showGradient = d.bgMode === "gradient" ? "" : "hidden";
   const showImage = d.bgMode === "image" ? "" : "hidden";
@@ -977,7 +994,6 @@ function editorHero(section, index, total) {
     .map((w) => `<option value="${w}" ${Number(d.subtitleWeight) === w ? "selected" : ""}>${w}</option>`)
     .join("");
   const profileSizeUnitOpts = cssUnitOptionsTpl(d.profileSizeUnit || "px");
-  const profileRadiusUnitOpts = cssUnitOptionsTpl(d.profileRadiusUnit || "px");
   const profileBorderWidthUnitOpts = cssUnitOptionsTpl(d.profileBorderWidthUnit || "px");
   const heroWidthUnitOpts = cssUnitOptionsTpl(d.heroWidthUnit || "%");
   const heroHeightUnitOpts = cssUnitOptionsTpl(d.heroHeightUnit || "px");
@@ -1047,11 +1063,11 @@ function editorHero(section, index, total) {
                     <input type="number" min="0" max="360" step="1" data-s="${section.id}" data-k="bgGradientAngle" data-t="n" value="${Number(d.bgGradientAngle)}" />
                   </div>
                 </div>
-                <div class="field ${showImage}">
-                  <label>Imagem de fundo (URL)</label>
-                  <input class="field-input-url-compact" type="text" data-s="${section.id}" data-k="bgImage" value="${esc(d.bgImage)}" placeholder="https://..." />
-                </div>
-	                <div class="field ${showImage}">
+                  <div class="field ${showImage}">
+                    <label>Imagem de fundo (URL)</label>
+                    <input class="field-input-url-compact" type="text" data-s="${section.id}" data-k="bgImage" value="${esc(d.bgImage)}" placeholder="https://..." />
+                  </div>
+		                <div class="field ${showImage}">
 	                  <label>Carregar imagem de fundo (explorer)</label>
 	                  <input class="file-input-compact" type="file" accept="image/*" data-a="upload-image" data-s="${section.id}" data-target="bg" />
 	                </div>
@@ -1066,18 +1082,18 @@ function editorHero(section, index, total) {
                     <label>Imagem de perfil visivel</label>
                     <input type="checkbox" data-s="${section.id}" data-k="showProfile" data-t="b" ${d.showProfile ? "checked" : ""} />
                   </div>
-                  <div class="field field-inline">
-                    <label>Acao de imagem de perfil</label>
-                    <div class="section-actions">
-                      <button class="btn btn-muted" data-a="hero-add" data-s="${section.id}" data-el="profile">Adicionar</button>
-                      ${
-                        hasProfileImage
-                          ? `<button class="btn btn-danger" data-a="hero-remove" data-s="${section.id}" data-el="profile">Remover</button>`
-                          : ""
-                      }
-                    </div>
-                  </div>
-                </div>
+	                  <div class="field field-inline">
+	                    <label>Acao de imagem de perfil</label>
+	                    <div class="section-actions">
+	                      ${showProfileAddAction ? `<button class="btn btn-muted" data-a="hero-add" data-s="${section.id}" data-el="profile">Adicionar</button>` : ""}
+	                      ${
+	                        showProfileRemoveAction
+	                          ? `<button class="btn btn-danger btn-icon" data-a="hero-remove" data-s="${section.id}" data-el="profile" title="Remover imagem de perfil" aria-label="Remover imagem de perfil">&#128465;</button>`
+	                          : ""
+	                      }
+	                    </div>
+	                  </div>
+	                </div>
                 <div class="field">
                   <label>Imagem de perfil (URL)</label>
                   <input class="field-input-url-compact" type="text" data-s="${section.id}" data-k="profileImage" value="${esc(d.profileImage)}" placeholder="https://..." />
@@ -1095,11 +1111,8 @@ function editorHero(section, index, total) {
                     </div>
                   </div>
                   <div class="field">
-                    <label>Raio da borda</label>
-                    <div class="input-unit">
-                      <input type="number" min="0" max="9999" data-s="${section.id}" data-k="profileRadius" data-t="n" value="${Number(d.profileRadius)}" />
-                      <select data-s="${section.id}" data-k="profileRadiusUnit">${profileRadiusUnitOpts}</select>
-                    </div>
+                    <label>Raio da borda (0-100)</label>
+                    <input type="number" min="0" max="100" data-s="${section.id}" data-k="profileRadius" data-t="n" value="${Number(d.profileRadius)}" />
                   </div>
                   <div class="field">
                     <label>Espessura da borda</label>
@@ -1130,14 +1143,18 @@ function editorHero(section, index, total) {
                     <label>Titulo visivel</label>
                     <input type="checkbox" data-s="${section.id}" data-k="showTitle" data-t="b" ${d.showTitle ? "checked" : ""} />
                   </div>
-                  <div class="field field-inline">
-                    <label>Acao de titulo</label>
-                    <div class="section-actions">
-                      <button class="btn btn-muted" data-a="hero-add" data-s="${section.id}" data-el="title">Adicionar</button>
-                      <button class="btn btn-danger" data-a="hero-remove" data-s="${section.id}" data-el="title">Remover</button>
-                    </div>
-                  </div>
-                </div>
+	                  <div class="field field-inline">
+	                    <label>Acao de titulo</label>
+	                    <div class="section-actions">
+	                      ${showTitleAddAction ? `<button class="btn btn-muted" data-a="hero-add" data-s="${section.id}" data-el="title">Adicionar</button>` : ""}
+	                      ${
+	                        showTitleRemoveAction
+	                          ? `<button class="btn btn-danger btn-icon" data-a="hero-remove" data-s="${section.id}" data-el="title" title="Remover titulo" aria-label="Remover titulo">&#128465;</button>`
+	                          : ""
+	                      }
+	                    </div>
+	                  </div>
+	                </div>
                 <div class="field">
                   <label>Titulo</label>
                   <input type="text" data-s="${section.id}" data-k="title" value="${esc(d.title)}" />
@@ -1184,14 +1201,18 @@ function editorHero(section, index, total) {
                     <label>Subtitulo visivel</label>
                     <input type="checkbox" data-s="${section.id}" data-k="showSubtitle" data-t="b" ${d.showSubtitle ? "checked" : ""} />
                   </div>
-                  <div class="field field-inline">
-                    <label>Acao de subtitulo</label>
-                    <div class="section-actions">
-                      <button class="btn btn-muted" data-a="hero-add" data-s="${section.id}" data-el="subtitle">Adicionar</button>
-                      <button class="btn btn-danger" data-a="hero-remove" data-s="${section.id}" data-el="subtitle">Remover</button>
-                    </div>
-                  </div>
-                </div>
+	                  <div class="field field-inline">
+	                    <label>Acao de subtitulo</label>
+	                    <div class="section-actions">
+	                      ${showSubtitleAddAction ? `<button class="btn btn-muted" data-a="hero-add" data-s="${section.id}" data-el="subtitle">Adicionar</button>` : ""}
+	                      ${
+	                        showSubtitleRemoveAction
+	                          ? `<button class="btn btn-danger btn-icon" data-a="hero-remove" data-s="${section.id}" data-el="subtitle" title="Remover subtitulo" aria-label="Remover subtitulo">&#128465;</button>`
+	                          : ""
+	                      }
+	                    </div>
+	                  </div>
+	                </div>
                 <div class="field">
                   <label>Subtitulo</label>
                   <input type="text" data-s="${section.id}" data-k="subtitle" value="${esc(d.subtitle)}" />
@@ -1501,6 +1522,12 @@ function editorFooter() {
   const d = state.page.footer;
   const collapsed = isSectionCollapsed(FOOTER_SECTION_ID);
   const alignOpts = alignOptionsTpl(d.contentAlign);
+  const hasFooterTitleText = Boolean(String(d.title || "").trim());
+  const hasFooterContentText = Boolean(String(d.content || "").trim());
+  const showFooterTitleAddAction = d.showTitle === false;
+  const showFooterTitleRemoveAction = d.showTitle !== false || hasFooterTitleText;
+  const showFooterContentAddAction = d.showContent === false;
+  const showFooterContentRemoveAction = d.showContent !== false || hasFooterContentText;
 
   return `
     <article class="section-card">
@@ -1539,13 +1566,21 @@ function editorFooter() {
                   <label>Titulo visivel</label>
                   <input id="footer-title-visible" type="checkbox" ${d.showTitle ? "checked" : ""} />
                 </div>
-                <div class="field field-inline">
-                  <label>Acao de titulo</label>
-                  <div class="section-actions">
-                    <button class="btn btn-muted" data-a="footer-add" data-el="title">Adicionar</button>
-                    <button class="btn btn-danger btn-icon" data-a="footer-remove" data-el="title" title="Remover titulo do rodape" aria-label="Remover titulo do rodape">&#128465;</button>
-                  </div>
-                </div>
+	                <div class="field field-inline">
+	                  <label>Acao de titulo</label>
+	                  <div class="section-actions">
+	                    ${
+	                      showFooterTitleAddAction
+	                        ? `<button class="btn btn-muted" data-a="footer-add" data-el="title">Adicionar</button>`
+	                        : ""
+	                    }
+	                    ${
+	                      showFooterTitleRemoveAction
+	                        ? `<button class="btn btn-danger btn-icon" data-a="footer-remove" data-el="title" title="Remover titulo do rodape" aria-label="Remover titulo do rodape">&#128465;</button>`
+	                        : ""
+	                    }
+	                  </div>
+	                </div>
               </div>
               <div class="field">
                 <label>Titulo do rodape</label>
@@ -1554,11 +1589,11 @@ function editorFooter() {
               <div class="field-row">
                 <div class="field">
                   <label>Posicao titulo (X): ${Number(d.footerTitleOffsetX)}px</label>
-                  <input id="footer-title-offset-x" type="range" min="-600" max="600" step="1" value="${Number(d.footerTitleOffsetX)}" />
+                  <input id="footer-title-offset-x" type="range" min="-600" max="600" step="1" value="${Number(d.footerTitleOffsetX)}" data-s="${FOOTER_SECTION_ID}" data-k="footerTitleOffsetX" data-t="n" />
                 </div>
                 <div class="field">
                   <label>Posicao titulo (Y): ${Number(d.footerTitleOffsetY)}px</label>
-                  <input id="footer-title-offset-y" type="range" min="-240" max="240" step="1" value="${Number(d.footerTitleOffsetY)}" />
+                  <input id="footer-title-offset-y" type="range" min="-240" max="240" step="1" value="${Number(d.footerTitleOffsetY)}" data-s="${FOOTER_SECTION_ID}" data-k="footerTitleOffsetY" data-t="n" />
                 </div>
               </div>
 
@@ -1567,13 +1602,21 @@ function editorFooter() {
                   <label>Conteudo visivel</label>
                   <input id="footer-content-visible" type="checkbox" ${d.showContent ? "checked" : ""} />
                 </div>
-                <div class="field field-inline">
-                  <label>Acao de conteudo</label>
-                  <div class="section-actions">
-                    <button class="btn btn-muted" data-a="footer-add" data-el="content">Adicionar</button>
-                    <button class="btn btn-danger btn-icon" data-a="footer-remove" data-el="content" title="Remover conteudo do rodape" aria-label="Remover conteudo do rodape">&#128465;</button>
-                  </div>
-                </div>
+	                <div class="field field-inline">
+	                  <label>Acao de conteudo</label>
+	                  <div class="section-actions">
+	                    ${
+	                      showFooterContentAddAction
+	                        ? `<button class="btn btn-muted" data-a="footer-add" data-el="content">Adicionar</button>`
+	                        : ""
+	                    }
+	                    ${
+	                      showFooterContentRemoveAction
+	                        ? `<button class="btn btn-danger btn-icon" data-a="footer-remove" data-el="content" title="Remover conteudo do rodape" aria-label="Remover conteudo do rodape">&#128465;</button>`
+	                        : ""
+	                    }
+	                  </div>
+	                </div>
               </div>
               <div class="field">
                 <label>Conteudo (contatos e outros)</label>
@@ -1582,11 +1625,11 @@ function editorFooter() {
               <div class="field-row">
                 <div class="field">
                   <label>Posicao conteudo (X): ${Number(d.footerContentOffsetX)}px</label>
-                  <input id="footer-content-offset-x" type="range" min="-600" max="600" step="1" value="${Number(d.footerContentOffsetX)}" />
+                  <input id="footer-content-offset-x" type="range" min="-600" max="600" step="1" value="${Number(d.footerContentOffsetX)}" data-s="${FOOTER_SECTION_ID}" data-k="footerContentOffsetX" data-t="n" />
                 </div>
                 <div class="field">
                   <label>Posicao conteudo (Y): ${Number(d.footerContentOffsetY)}px</label>
-                  <input id="footer-content-offset-y" type="range" min="-240" max="240" step="1" value="${Number(d.footerContentOffsetY)}" />
+                  <input id="footer-content-offset-y" type="range" min="-240" max="240" step="1" value="${Number(d.footerContentOffsetY)}" data-s="${FOOTER_SECTION_ID}" data-k="footerContentOffsetY" data-t="n" />
                 </div>
               </div>
             </div>
@@ -1673,21 +1716,18 @@ function previewHero(section) {
         : bgMode === "none"
           ? "background:transparent;"
           : `background:${esc(d.bgColor || "#1d4ed8")};`;
-  const alignMap = { left: "start", center: "center", right: "end" };
   const textAlignMap = { left: "left", center: "center", right: "right" };
   const titleAlign = ["left", "center", "right"].includes(d.titleAlign) ? d.titleAlign : d.contentAlign;
   const subtitleAlign = ["left", "center", "right"].includes(d.subtitleAlign) ? d.subtitleAlign : d.contentAlign;
-  const titleJustify = alignMap[titleAlign] || "center";
-  const subtitleJustify = alignMap[subtitleAlign] || "center";
   const titleTextAlign = textAlignMap[titleAlign] || "center";
   const subtitleTextAlign = textAlignMap[subtitleAlign] || "center";
   const profileVisible = d.showProfile !== false;
   const titleVisible = d.showTitle !== false;
   const subtitleVisible = d.showSubtitle !== false;
   const heroWidthCss = previewInlineLength(d.heroWidth, d.heroWidthUnit, 100, "%");
-  const heroMinHeightCss = Number(d.heroHeight) > 0 ? cssLength(d.heroHeight, d.heroHeightUnit, 0, "px") : "";
+  const heroMinHeightCss = Number(d.heroHeight) > 0 ? cssLength(d.heroHeight, d.heroHeightUnit, 0, "px") : "220px";
   const profileSizeCss = cssLength(d.profileSize, d.profileSizeUnit, 120, "px");
-  const profileRadiusCss = cssLength(d.profileRadius, d.profileRadiusUnit, 999, "px");
+  const profileRadiusCss = `${clamp(Number(d.profileRadius) || 0, 0, 100)}%`;
   const profileBorderWidthCss = cssLength(d.profileBorderWidth, d.profileBorderWidthUnit, 3, "px");
   const titleSizeCss = cssLength(d.titleSize, d.titleSizeUnit, 42, "px");
   const subtitleSizeCss = cssLength(d.subtitleSize, d.subtitleSizeUnit, 19, "px");
@@ -1700,25 +1740,23 @@ function previewHero(section) {
       ${
         profileVisible
           ? profileSrc
-            ? `<img class="preview-profile" style="position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%, -50%) translate(${Number(d.profileOffsetX)}px, ${Number(d.profileOffsetY)}px);width:${profileSizeCss};height:${profileSizeCss};border-radius:${profileRadiusCss};border-width:${profileBorderWidthCss};" src="${profileSrc}" alt="Perfil" />`
-            : `<div class="preview-profile preview-profile-placeholder" style="position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%, -50%) translate(${Number(d.profileOffsetX)}px, ${Number(d.profileOffsetY)}px);width:${profileSizeCss};height:${profileSizeCss};border-radius:${profileRadiusCss};border-width:${profileBorderWidthCss};">
+            ? `<img class="preview-profile preview-draggable preview-hero-draggable" data-s="${section.id}" data-drag-scope="hero" data-drag-el="profile" style="position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%, -50%) translate(${Number(d.profileOffsetX)}px, ${Number(d.profileOffsetY)}px);width:${profileSizeCss};height:${profileSizeCss};border-radius:${profileRadiusCss};border-width:${profileBorderWidthCss};" src="${profileSrc}" alt="Perfil" />`
+            : `<div class="preview-profile preview-profile-placeholder preview-draggable preview-hero-draggable" data-s="${section.id}" data-drag-scope="hero" data-drag-el="profile" style="position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%, -50%) translate(${Number(d.profileOffsetX)}px, ${Number(d.profileOffsetY)}px);width:${profileSizeCss};height:${profileSizeCss};border-radius:${profileRadiusCss};border-width:${profileBorderWidthCss};">
                 <span class="preview-profile-placeholder-icon">${cameraIconSvg()}</span>
                 <span class="preview-profile-placeholder-text">Adicionar foto</span>
               </div>`
           : ""
       }
-      <div class="preview-hero-content" style="justify-items:stretch;text-align:left;">
-        ${
-          titleVisible
-            ? `<h1 style="justify-self:${titleJustify};text-align:${titleTextAlign};width:min(100%,760px);transform:translate(${Number(d.titleOffsetX)}px, ${Number(d.titleOffsetY)}px);margin:0;color:${esc(d.titleColor)};font-size:${titleSizeCss};font-weight:${Number(d.titleWeight)};">${esc(d.title)}</h1>`
-            : ""
-        }
-        ${
-          subtitleVisible
-            ? `<p style="justify-self:${subtitleJustify};text-align:${subtitleTextAlign};width:min(100%,760px);transform:translate(${Number(d.subtitleOffsetX)}px, ${Number(d.subtitleOffsetY)}px);margin:0;color:${esc(d.subtitleColor)};font-size:${subtitleSizeCss};font-weight:${Number(d.subtitleWeight)};">${esc(d.subtitle)}</p>`
-            : ""
-        }
-      </div>
+      ${
+        titleVisible
+          ? `<h1 class="preview-hero-title preview-draggable preview-hero-draggable" data-s="${section.id}" data-drag-scope="hero" data-drag-el="title" style="position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%, -50%) translate(${Number(d.titleOffsetX)}px, ${Number(d.titleOffsetY)}px);margin:0;color:${esc(d.titleColor)};font-size:${titleSizeCss};font-weight:${Number(d.titleWeight)};text-align:${titleTextAlign};max-width:min(calc(100% - 24px), 760px);">${esc(d.title)}</h1>`
+          : ""
+      }
+      ${
+        subtitleVisible
+          ? `<p class="preview-hero-subtitle preview-draggable preview-hero-draggable" data-s="${section.id}" data-drag-scope="hero" data-drag-el="subtitle" style="position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%, -50%) translate(${Number(d.subtitleOffsetX)}px, ${Number(d.subtitleOffsetY)}px);margin:0;color:${esc(d.subtitleColor)};font-size:${subtitleSizeCss};font-weight:${Number(d.subtitleWeight)};text-align:${subtitleTextAlign};max-width:min(calc(100% - 24px), 760px);">${esc(d.subtitle)}</p>`
+          : ""
+      }
     </section>
   `;
 }
@@ -1800,16 +1838,16 @@ function previewFooter() {
   if (!d || d.enabled === false || d.showFooter === false) return "";
   const textAlign = ["left", "center", "right"].includes(d.contentAlign) ? d.contentAlign : "left";
   return `
-    <footer class="preview-footer" style="background:${esc(d.bgColor)};color:${esc(d.textColor)};">
+    <footer class="preview-footer" data-s="${FOOTER_SECTION_ID}" style="background:${esc(d.bgColor)};color:${esc(d.textColor)};">
       <div class="preview-footer-inner" style="text-align:${textAlign};">
         ${
           d.showTitle !== false
-            ? `<h3 class="preview-footer-title" style="transform:translate(${Number(d.footerTitleOffsetX)}px, ${Number(d.footerTitleOffsetY)}px);">${esc(d.title)}</h3>`
+            ? `<h3 class="preview-footer-title preview-draggable preview-footer-draggable" data-s="${FOOTER_SECTION_ID}" data-drag-scope="footer" data-drag-el="title" style="transform:translate(${Number(d.footerTitleOffsetX)}px, ${Number(d.footerTitleOffsetY)}px);">${esc(d.title)}</h3>`
             : ""
         }
         ${
           d.showContent !== false
-            ? `<p class="preview-footer-content" style="transform:translate(${Number(d.footerContentOffsetX)}px, ${Number(d.footerContentOffsetY)}px);">${esc(d.content)}</p>`
+            ? `<p class="preview-footer-content preview-draggable preview-footer-draggable" data-s="${FOOTER_SECTION_ID}" data-drag-scope="footer" data-drag-el="content" style="transform:translate(${Number(d.footerContentOffsetX)}px, ${Number(d.footerContentOffsetY)}px);">${esc(d.content)}</p>`
             : ""
         }
       </div>
@@ -2165,13 +2203,65 @@ function enhanceRangeInputs() {
   });
 }
 
-function syncHeroProfileBounds() {
+function applyHeroDragTransform(element, x, y) {
+  if (!(element instanceof HTMLElement)) return;
+  element.style.transform = `translate(-50%, -50%) translate(${Number(x) || 0}px, ${Number(y) || 0}px)`;
+}
+
+function applyFooterDragTransform(element, x, y) {
+  if (!(element instanceof HTMLElement)) return;
+  element.style.transform = `translate(${Number(x) || 0}px, ${Number(y) || 0}px)`;
+}
+
+function syncSectionRangeControl(sectionId, key, minValue, maxValue, currentValue) {
+  const selector = `input[type="range"][data-s="${cssEscape(sectionId)}"][data-k="${key}"]`;
+  const range = app.querySelector(selector);
+  if (!(range instanceof HTMLInputElement)) return;
+  const min = String(Number(minValue) || 0);
+  const max = String(Number(maxValue) || 0);
+  const current = String(Number(currentValue) || 0);
+  if (range.min !== min) range.min = min;
+  if (range.max !== max) range.max = max;
+  if (range.value !== current) range.value = current;
+
+  const rangeControl = range.closest(".range-control");
+  const numberInput = rangeControl ? rangeControl.querySelector(".range-number") : null;
+  if (numberInput instanceof HTMLInputElement) {
+    if (numberInput.min !== min) numberInput.min = min;
+    if (numberInput.max !== max) numberInput.max = max;
+    if (numberInput.value !== current) numberInput.value = current;
+  }
+  updateRangeLabel(range);
+}
+
+function syncFooterRangeControl(inputId, currentValue, minValue, maxValue) {
+  const range = app.querySelector(`#${cssEscape(inputId)}`);
+  if (!(range instanceof HTMLInputElement)) return;
+  const min = String(Number(minValue) || 0);
+  const max = String(Number(maxValue) || 0);
+  const current = String(Number(currentValue) || 0);
+  if (range.min !== min) range.min = min;
+  if (range.max !== max) range.max = max;
+  if (range.value !== current) range.value = current;
+
+  const rangeControl = range.closest(".range-control");
+  const numberInput = rangeControl ? rangeControl.querySelector(".range-number") : null;
+  if (numberInput instanceof HTMLInputElement) {
+    if (numberInput.min !== min) numberInput.min = min;
+    if (numberInput.max !== max) numberInput.max = max;
+    if (numberInput.value !== current) numberInput.value = current;
+  }
+  updateRangeLabel(range);
+}
+
+function syncHeroDragBounds() {
   if (!state.auth.logged) return;
-  if (!state.ui.heroProfileBounds || typeof state.ui.heroProfileBounds !== "object") {
-    state.ui.heroProfileBounds = {};
+  if (!state.ui.heroDragBounds || typeof state.ui.heroDragBounds !== "object") {
+    state.ui.heroDragBounds = {};
   }
 
   let stateChanged = false;
+  const seenSectionIds = new Set();
   const heroNodes = app.querySelectorAll(".preview-hero[data-s]");
   heroNodes.forEach((heroNode) => {
     if (!(heroNode instanceof HTMLElement)) return;
@@ -2179,66 +2269,283 @@ function syncHeroProfileBounds() {
     if (!sectionId) return;
     const section = getSection(sectionId);
     if (!section || section.type !== "hero") return;
-
-    const profileEl = heroNode.querySelector(".preview-profile");
-    if (!(profileEl instanceof HTMLElement)) {
-      delete state.ui.heroProfileBounds[sectionId];
-      return;
-    }
+    seenSectionIds.add(sectionId);
 
     const heroRect = heroNode.getBoundingClientRect();
-    const profileRect = profileEl.getBoundingClientRect();
     const heroWidth = heroRect.width;
     const heroHeight = heroRect.height;
-    const profileWidth = profileRect.width;
-    const profileHeight = profileRect.height;
-    if (!(heroWidth > 0 && heroHeight > 0 && profileWidth > 0 && profileHeight > 0)) return;
+    if (!(heroWidth > 0 && heroHeight > 0)) return;
 
-    const maxX = Math.max(0, Math.floor((heroWidth - profileWidth) / 2));
-    const maxY = Math.max(0, Math.floor((heroHeight - profileHeight) / 2));
-    state.ui.heroProfileBounds[sectionId] = { maxX, maxY };
+    const sectionBounds = {};
+    Object.entries(HERO_DRAG_FIELD_MAP).forEach(([elementKey, cfg]) => {
+      const dragEl = heroNode.querySelector(
+        `.preview-hero-draggable[data-drag-scope="hero"][data-drag-el="${elementKey}"]`
+      );
+      if (!(dragEl instanceof HTMLElement)) return;
 
-    const currentX = Number(section.data.profileOffsetX) || 0;
-    const currentY = Number(section.data.profileOffsetY) || 0;
-    const clampedX = clamp(currentX, -maxX, maxX);
-    const clampedY = clamp(currentY, -maxY, maxY);
+      const elementRect = dragEl.getBoundingClientRect();
+      const elementWidth = elementRect.width;
+      const elementHeight = elementRect.height;
+      if (!(elementWidth > 0 && elementHeight > 0)) return;
 
-    if (clampedX !== currentX) {
-      section.data.profileOffsetX = clampedX;
-      stateChanged = true;
-    }
-    if (clampedY !== currentY) {
-      section.data.profileOffsetY = clampedY;
-      stateChanged = true;
-    }
+      const maxX = Math.max(0, Math.floor((heroWidth - elementWidth) / 2));
+      const maxY = Math.max(0, Math.floor((heroHeight - elementHeight) / 2));
+      sectionBounds[elementKey] = { maxX, maxY };
 
-    profileEl.style.transform = `translate(-50%, -50%) translate(${clampedX}px, ${clampedY}px)`;
+      const currentX = Number(section.data[cfg.xKey]) || 0;
+      const currentY = Number(section.data[cfg.yKey]) || 0;
+      const clampedX = clamp(currentX, -maxX, maxX);
+      const clampedY = clamp(currentY, -maxY, maxY);
 
-    const syncAxisInput = (key, maxValue, currentValue) => {
-      const selector = `input[type="range"][data-s="${cssEscape(sectionId)}"][data-k="${key}"]`;
-      const range = app.querySelector(selector);
-      if (!(range instanceof HTMLInputElement)) return;
-      const min = String(-maxValue);
-      const max = String(maxValue);
-      if (range.min !== min) range.min = min;
-      if (range.max !== max) range.max = max;
-      if (range.value !== String(currentValue)) range.value = String(currentValue);
-
-      const rangeControl = range.closest(".range-control");
-      const numberInput = rangeControl ? rangeControl.querySelector(".range-number") : null;
-      if (numberInput instanceof HTMLInputElement) {
-        if (numberInput.min !== min) numberInput.min = min;
-        if (numberInput.max !== max) numberInput.max = max;
-        if (numberInput.value !== String(currentValue)) numberInput.value = String(currentValue);
+      if (clampedX !== currentX) {
+        section.data[cfg.xKey] = clampedX;
+        stateChanged = true;
       }
-      updateRangeLabel(range);
-    };
+      if (clampedY !== currentY) {
+        section.data[cfg.yKey] = clampedY;
+        stateChanged = true;
+      }
 
-    syncAxisInput("profileOffsetX", maxX, clampedX);
-    syncAxisInput("profileOffsetY", maxY, clampedY);
+      applyHeroDragTransform(dragEl, clampedX, clampedY);
+      syncSectionRangeControl(sectionId, cfg.xKey, -maxX, maxX, clampedX);
+      syncSectionRangeControl(sectionId, cfg.yKey, -maxY, maxY, clampedY);
+    });
+
+    if (Object.keys(sectionBounds).length) {
+      state.ui.heroDragBounds[sectionId] = sectionBounds;
+    } else {
+      delete state.ui.heroDragBounds[sectionId];
+    }
+  });
+
+  Object.keys(state.ui.heroDragBounds).forEach((sectionId) => {
+    if (!seenSectionIds.has(sectionId)) delete state.ui.heroDragBounds[sectionId];
   });
 
   if (stateChanged) schedulePersist();
+}
+
+function syncFooterDragBounds() {
+  if (!state.auth.logged) return;
+  if (!state.ui.footerDragBounds || typeof state.ui.footerDragBounds !== "object") {
+    state.ui.footerDragBounds = {};
+  }
+
+  const footer = state.page.footer;
+  const footerNode = app.querySelector(`.preview-footer[data-s="${FOOTER_SECTION_ID}"]`);
+  const footerInner = footerNode ? footerNode.querySelector(".preview-footer-inner") : null;
+  if (
+    !footer ||
+    footer.enabled === false ||
+    footer.showFooter === false ||
+    !(footerNode instanceof HTMLElement) ||
+    !(footerInner instanceof HTMLElement)
+  ) {
+    state.ui.footerDragBounds = {};
+    return;
+  }
+
+  const containerRect = footerInner.getBoundingClientRect();
+  if (!(containerRect.width > 0 && containerRect.height > 0)) return;
+
+  let stateChanged = false;
+  const nextBounds = {};
+  Object.entries(FOOTER_DRAG_FIELD_MAP).forEach(([elementKey, cfg]) => {
+    const dragEl = footerNode.querySelector(`.preview-footer-draggable[data-drag-el="${elementKey}"]`);
+    if (!(dragEl instanceof HTMLElement)) return;
+
+    const currentX = Number(footer[cfg.xKey]) || 0;
+    const currentY = Number(footer[cfg.yKey]) || 0;
+    applyFooterDragTransform(dragEl, currentX, currentY);
+
+    const rect = dragEl.getBoundingClientRect();
+    const leftSpace = rect.left - containerRect.left;
+    const rightSpace = containerRect.right - rect.right;
+    const topSpace = rect.top - containerRect.top;
+    const bottomSpace = containerRect.bottom - rect.bottom;
+
+    let minX = Math.ceil(currentX - leftSpace);
+    let maxX = Math.floor(currentX + rightSpace);
+    let minY = Math.ceil(currentY - topSpace);
+    let maxY = Math.floor(currentY + bottomSpace);
+    if (minX > maxX) minX = maxX = currentX;
+    if (minY > maxY) minY = maxY = currentY;
+
+    const clampedX = clamp(currentX, minX, maxX);
+    const clampedY = clamp(currentY, minY, maxY);
+    if (clampedX !== currentX) {
+      footer[cfg.xKey] = clampedX;
+      stateChanged = true;
+    }
+    if (clampedY !== currentY) {
+      footer[cfg.yKey] = clampedY;
+      stateChanged = true;
+    }
+
+    applyFooterDragTransform(dragEl, clampedX, clampedY);
+    nextBounds[elementKey] = { minX, maxX, minY, maxY };
+
+    if (elementKey === "title") {
+      syncFooterRangeControl("footer-title-offset-x", clampedX, minX, maxX);
+      syncFooterRangeControl("footer-title-offset-y", clampedY, minY, maxY);
+    }
+    if (elementKey === "content") {
+      syncFooterRangeControl("footer-content-offset-x", clampedX, minX, maxX);
+      syncFooterRangeControl("footer-content-offset-y", clampedY, minY, maxY);
+    }
+  });
+
+  state.ui.footerDragBounds = nextBounds;
+  if (stateChanged) schedulePersist();
+}
+
+function syncPreviewDragBounds() {
+  syncHeroDragBounds();
+  syncFooterDragBounds();
+}
+
+let previewDragSession = null;
+
+function onPointerDown(event) {
+  if (!(event.target instanceof Element)) return;
+  if (event.button != null && event.button !== 0) return;
+
+  const dragTarget = event.target.closest(".preview-draggable[data-s][data-drag-scope][data-drag-el]");
+  if (!(dragTarget instanceof HTMLElement)) return;
+  if (!dragTarget.closest(".preview-shell.is-editor-preview")) return;
+
+  const sectionId = dragTarget.dataset.s;
+  const scope = dragTarget.dataset.dragScope;
+  const elementKey = dragTarget.dataset.dragEl;
+  if (!sectionId || !scope || !elementKey) return;
+
+  syncPreviewDragBounds();
+
+  let cfg = null;
+  let startOffsetX = 0;
+  let startOffsetY = 0;
+  let minX = 0;
+  let maxX = 0;
+  let minY = 0;
+  let maxY = 0;
+
+  if (scope === "hero") {
+    cfg = HERO_DRAG_FIELD_MAP[elementKey];
+    if (!cfg) return;
+    const section = getSection(sectionId);
+    if (!section || section.type !== "hero") return;
+    const bounds = state.ui.heroDragBounds?.[sectionId]?.[elementKey] || { maxX: 0, maxY: 0 };
+    startOffsetX = Number(section.data[cfg.xKey]) || 0;
+    startOffsetY = Number(section.data[cfg.yKey]) || 0;
+    maxX = Number(bounds.maxX) || 0;
+    maxY = Number(bounds.maxY) || 0;
+    minX = -maxX;
+    minY = -maxY;
+  } else if (scope === "footer") {
+    if (sectionId !== FOOTER_SECTION_ID) return;
+    cfg = FOOTER_DRAG_FIELD_MAP[elementKey];
+    if (!cfg) return;
+    const footer = state.page.footer;
+    if (!footer || footer.enabled === false || footer.showFooter === false) return;
+    const bounds = state.ui.footerDragBounds?.[elementKey] || { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    startOffsetX = Number(footer[cfg.xKey]) || 0;
+    startOffsetY = Number(footer[cfg.yKey]) || 0;
+    minX = Number.isFinite(Number(bounds.minX)) ? Number(bounds.minX) : 0;
+    maxX = Number.isFinite(Number(bounds.maxX)) ? Number(bounds.maxX) : 0;
+    minY = Number.isFinite(Number(bounds.minY)) ? Number(bounds.minY) : 0;
+    maxY = Number.isFinite(Number(bounds.maxY)) ? Number(bounds.maxY) : 0;
+  } else {
+    return;
+  }
+
+  previewDragSession = {
+    pointerId: event.pointerId,
+    scope,
+    sectionId,
+    elementKey,
+    cfg,
+    target: dragTarget,
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+    startOffsetX,
+    startOffsetY,
+    minX,
+    maxX,
+    minY,
+    maxY
+  };
+
+  dragTarget.classList.add("is-dragging");
+  app.classList.add("is-preview-dragging");
+  try {
+    dragTarget.setPointerCapture(event.pointerId);
+  } catch {
+    // Some elements/browsers may not support pointer capture here.
+  }
+  event.preventDefault();
+}
+
+function onPointerMove(event) {
+  if (!previewDragSession) return;
+  if (event.pointerId !== previewDragSession.pointerId) return;
+
+  const { scope, sectionId, elementKey, cfg } = previewDragSession;
+  if (!cfg) return;
+
+  const dx = Math.round(event.clientX - previewDragSession.startClientX);
+  const dy = Math.round(event.clientY - previewDragSession.startClientY);
+  const nextX = clamp(previewDragSession.startOffsetX + dx, previewDragSession.minX, previewDragSession.maxX);
+  const nextY = clamp(previewDragSession.startOffsetY + dy, previewDragSession.minY, previewDragSession.maxY);
+
+  if (scope === "hero") {
+    const section = getSection(sectionId);
+    if (!section || section.type !== "hero") return;
+    section.data[cfg.xKey] = nextX;
+    section.data[cfg.yKey] = nextY;
+    applyHeroDragTransform(previewDragSession.target, nextX, nextY);
+    syncSectionRangeControl(sectionId, cfg.xKey, previewDragSession.minX, previewDragSession.maxX, nextX);
+    syncSectionRangeControl(sectionId, cfg.yKey, previewDragSession.minY, previewDragSession.maxY, nextY);
+  } else if (scope === "footer") {
+    const footer = state.page.footer;
+    if (!footer) return;
+    footer[cfg.xKey] = nextX;
+    footer[cfg.yKey] = nextY;
+    applyFooterDragTransform(previewDragSession.target, nextX, nextY);
+    if (elementKey === "title") {
+      syncFooterRangeControl("footer-title-offset-x", nextX, previewDragSession.minX, previewDragSession.maxX);
+      syncFooterRangeControl("footer-title-offset-y", nextY, previewDragSession.minY, previewDragSession.maxY);
+    } else if (elementKey === "content") {
+      syncFooterRangeControl("footer-content-offset-x", nextX, previewDragSession.minX, previewDragSession.maxX);
+      syncFooterRangeControl("footer-content-offset-y", nextY, previewDragSession.minY, previewDragSession.maxY);
+    }
+  } else {
+    return;
+  }
+
+  event.preventDefault();
+}
+
+function finishPreviewDrag(pointerId = null) {
+  if (!previewDragSession) return;
+  if (pointerId != null && previewDragSession.pointerId !== pointerId) return;
+
+  const target = previewDragSession.target;
+  if (target instanceof HTMLElement) {
+    target.classList.remove("is-dragging");
+    try {
+      target.releasePointerCapture(previewDragSession.pointerId);
+    } catch {
+      // Ignore if pointer capture was not active.
+    }
+  }
+  app.classList.remove("is-preview-dragging");
+  previewDragSession = null;
+  syncPreviewDragBounds();
+  schedulePersist();
+}
+
+function onPointerUp(event) {
+  finishPreviewDrag(event?.pointerId ?? null);
 }
 
 function renderPreviewOnly(options = {}) {
@@ -2268,7 +2575,7 @@ function renderPreviewOnly(options = {}) {
   if (nextPreviewArea) {
     nextPreviewArea.scrollTop = keepHeroVisible ? 0 : previousScrollTop;
   }
-  syncHeroProfileBounds();
+  syncPreviewDragBounds();
   syncModalDom();
   schedulePersist();
 }
@@ -2293,7 +2600,7 @@ function render(preserveFocus = false) {
   const focusState = preserveFocus ? captureFocusState() : null;
   app.innerHTML = state.auth.logged ? appTpl() : authTpl();
   enhanceRangeInputs();
-  syncHeroProfileBounds();
+  syncPreviewDragBounds();
   if (focusState) restoreFocusState(focusState);
   schedulePersist();
 }
@@ -2364,12 +2671,18 @@ function onInput(event) {
     return;
   }
   if (t.id === "footer-title-offset-x") {
-    state.page.footer.footerTitleOffsetX = clamp(Number(t.value) || 0, -600, 600);
+    const b = state.ui.footerDragBounds?.title;
+    state.page.footer.footerTitleOffsetX = b
+      ? clamp(Number(t.value) || 0, Number(b.minX) || 0, Number(b.maxX) || 0)
+      : clamp(Number(t.value) || 0, -600, 600);
     renderPreviewOnly();
     return;
   }
   if (t.id === "footer-title-offset-y") {
-    state.page.footer.footerTitleOffsetY = clamp(Number(t.value) || 0, -240, 240);
+    const b = state.ui.footerDragBounds?.title;
+    state.page.footer.footerTitleOffsetY = b
+      ? clamp(Number(t.value) || 0, Number(b.minY) || 0, Number(b.maxY) || 0)
+      : clamp(Number(t.value) || 0, -240, 240);
     renderPreviewOnly();
     return;
   }
@@ -2384,12 +2697,18 @@ function onInput(event) {
     return;
   }
   if (t.id === "footer-content-offset-x") {
-    state.page.footer.footerContentOffsetX = clamp(Number(t.value) || 0, -600, 600);
+    const b = state.ui.footerDragBounds?.content;
+    state.page.footer.footerContentOffsetX = b
+      ? clamp(Number(t.value) || 0, Number(b.minX) || 0, Number(b.maxX) || 0)
+      : clamp(Number(t.value) || 0, -600, 600);
     renderPreviewOnly();
     return;
   }
   if (t.id === "footer-content-offset-y") {
-    state.page.footer.footerContentOffsetY = clamp(Number(t.value) || 0, -240, 240);
+    const b = state.ui.footerDragBounds?.content;
+    state.page.footer.footerContentOffsetY = b
+      ? clamp(Number(t.value) || 0, Number(b.minY) || 0, Number(b.maxY) || 0)
+      : clamp(Number(t.value) || 0, -240, 240);
     renderPreviewOnly();
     return;
   }
@@ -2419,10 +2738,18 @@ function onInput(event) {
   } else {
     if (key === "heroWidth") value = clamp(Number(value), 1, 5000);
     if (key === "heroHeight") value = clamp(Number(value), 0, 5000);
-    if ((key === "profileOffsetX" || key === "profileOffsetY") && state.ui.heroProfileBounds?.[sectionId]) {
-      const bounds = state.ui.heroProfileBounds[sectionId];
-      if (key === "profileOffsetX") value = clamp(Number(value) || 0, -(bounds.maxX || 0), bounds.maxX || 0);
-      if (key === "profileOffsetY") value = clamp(Number(value) || 0, -(bounds.maxY || 0), bounds.maxY || 0);
+    if (key === "profileRadius") value = clamp(Number(value), 0, 100);
+    if (state.ui.heroDragBounds?.[sectionId]) {
+      const dragBounds = state.ui.heroDragBounds[sectionId];
+      const dragEntry = Object.entries(HERO_DRAG_FIELD_MAP).find(([, cfg]) => cfg.xKey === key || cfg.yKey === key);
+      if (dragEntry) {
+        const [elementKey, cfg] = dragEntry;
+        const bounds = dragBounds[elementKey];
+        if (bounds) {
+          if (cfg.xKey === key) value = clamp(Number(value) || 0, -(bounds.maxX || 0), bounds.maxX || 0);
+          if (cfg.yKey === key) value = clamp(Number(value) || 0, -(bounds.maxY || 0), bounds.maxY || 0);
+        }
+      }
     }
     section.data[key] = value;
   }
@@ -2749,5 +3076,9 @@ app.addEventListener("input", onInput);
 app.addEventListener("change", onChange);
 app.addEventListener("click", onClick);
 app.addEventListener("submit", onSubmit);
+app.addEventListener("pointerdown", onPointerDown);
+window.addEventListener("pointermove", onPointerMove);
+window.addEventListener("pointerup", onPointerUp);
+window.addEventListener("pointercancel", onPointerUp);
 
 render();

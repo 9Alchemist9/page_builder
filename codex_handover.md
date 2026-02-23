@@ -69,6 +69,15 @@ Data de atualizacao: 23/02/2026
   - Subsecoes colapsaveis no editor do Hero (`Fundo`, `Imagem de perfil`, `Titulo`, `Subtitulo`).
   - Colapso com chevron (mesmo estilo visual de combobox), substituindo triangulos.
   - Foto de perfil do Hero reposicionada em relacao ao centro absoluto do Hero (`0x/0y = centro`) com limite automatico nas bordas.
+  - Titulo e subtitulo do Hero passaram a usar a mesma regra da foto de perfil (centro absoluto + limites nas bordas do Hero).
+  - Drag por mouse no preview (builder) para elementos posicionaveis:
+    - Hero: foto de perfil, titulo e subtitulo.
+    - Rodape: titulo e conteudo.
+  - Clamps dinamicos para offsets do Rodape (inclusive ao digitar nos campos/sliders), impedindo ultrapassar bordas do container.
+  - `border-radius` da foto de perfil do Hero padronizado em escala `0..100` (percentual), onde `0` = quadrado e `100` = totalmente redondo.
+  - Botoes de acao no Hero/Rodape ficaram contextuais:
+    - `Adicionar` so aparece quando o item esta oculto/ausente.
+    - `Remover` usa icone de lixeira (padrao visual das secoes).
   - Campos de URL/upload de imagem do Hero mais compactos e alinhados.
 
 ## Pendencias para a proxima sessao
